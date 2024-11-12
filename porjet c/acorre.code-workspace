@@ -1,0 +1,8 @@
+{
+	"folders": [
+		{
+			"name": "SSH FS - serveur_test_acorre.fr",
+			"uri": "ssh://serveur_test_acorre.fr/home/acorre"
+		}
+	]
+}
