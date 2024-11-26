@@ -1,30 +1,20 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g
-LDFLAGS = -lm
 
-# Object files
-OBJS = main.o sequence.o
-STATIC_OBJS = hash_x86_64.o list_x86_64.o
+#sequence
 
-# Output binary
-TARGET = program
+test_sequence: etape1/main.c etape1/sequence.o
+	$(CC) $(CFLAGS) -c etape1/sequence.o etape1/hash_x86_64.o etape1/list_x86_64.o etape1/main.c 
 
-all: $(TARGET)
+sequence.o: etape1/sequence.c etape1/sequence.h
+	$(CC) $(CFLAGS) -c etape1/sequence.c -o etape1/sequence.o
 
-# Link all objects to create the final executable
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(STATIC_OBJS) $(LDFLAGS)
+#tab_dynamique
+test_tab_dynamique: test_tab_dynamique.c 
+	$(CC) $(CFLAGS) test_tab_dynamique.o tab_dynamique.o -o test_tab_dynamique
 
-# Compile C files to object files
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Clean up build files
+tab_dynamique.o: etape2/tab_dynamique.c etape2/tab_dynamique.h
+	$(CC) $(CFLAGS) -c etape2/tab_dynamique.c
+#
 clean:
-	rm -f $(OBJS) $(TARGET)
-
-# Deep clean removes everything, including hash_x86_64.o and list_x86_64.o
-deep_clean: clean
-	rm -f $(STATIC_OBJS)
-
-.PHONY: all clean deep_clean
+	rm -f *.o test_tab_dynamique
