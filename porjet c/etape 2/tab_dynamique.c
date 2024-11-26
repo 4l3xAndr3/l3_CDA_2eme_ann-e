@@ -1,71 +1,84 @@
-#include "tab_dynamique.h";
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include "tab_dynamique.h"
 
-tab_dynamic * tab_initialize(size_t taillemax){
+tab_dynamic * tab_initialize(size_t taillemax) {
+    if (taillemax <= 0) {
+        return NULL;
+    }
     tab_dynamic *tab = malloc(sizeof(tab_dynamic));
+    if (!tab) {
+        return NULL;
+    }
     tab->data = malloc(taillemax * sizeof(void *));
+    if (!tab->data) {
+        free(tab);
+        return NULL;
+    }
     tab->taille = 0;
     tab->tailleMax = taillemax;
     return tab;
 }
 
-
-int tab_destroy(tab_dynamic * tab){
+int tab_destroy(tab_dynamic * tab) {
+    if (!tab) {
+        return 0; 
+    }
+    free(tab->data);
     free(tab);
-}
-
-
-void * read_tab(tab_dynamic * tab,int position){
-    if(position>tab->tailleMax || position<0){
-        return "";
-    }
-    void * element = tab->data[position];
-    return element;
-}
-
-
-int write_tab(tab_dynamic * tab,void * element,int position){
-    if(position>tab->tailleMax || position<0 || element == ""){
-        return 0;
-    }
-    tab->data[position]=element;
-    if(position>tab->taille){
-        tab->taille = position;
-    }
     return 1;
 }
 
-
-int add_élément_tab(tab_dynamic * tab,void * element){
-    if(tab == "" || element == ""){
-        return 0;
+void * read_tab(tab_dynamic * tab, int position) {
+    if (!tab || position < 0 || position >= tab->taille) {
+        return NULL; 
     }
-    tab->data[++tab->taille]=element;
-    return 1;
+    return tab->data[position];
 }
 
-/*
-int add_élément_decal_tab(tab_dynamic * tab,void * element,int position){
-    if(position>tab->tailleMax || position<0 || element == ""){
+int write_tab(tab_dynamic * tab, void * mot, int position) {
+    if (!tab || position < 0 || position >= tab->tailleMax || !mot) {
+        return 0; 
+    }
+    if (position >= tab->taille) {
+        tab->taille = position + 1; 
+    }
+    tab->data[position] = mot;
+    return 1; 
+}
+
+int add_element_tab(tab_dynamic * tab, void * mot) {
+    if (!tab || !mot) {
+        return 0; 
+    }
+    if (tab->taille >= tab->tailleMax) {
+        return 0; 
+    }
+    tab->data[tab->taille++] = mot; 
+    return 1; 
+}
+
+int add_element_decal_tab(tab_dynamic * tab, void * mot, int position) {
+    if (!tab || position < 0 || position > tab->taille || !mot) {
+        return 0; 
+    }
+    if (tab->taille >= tab->tailleMax) {
         return 0;
     }
-    void *elem=tab->data[position];
-    for(int i = position;i<tab->tailleMax;i++){
-        write_tab[tab,elem,i];
+    for (int i = tab->taille; i > position; i--) {
+        tab->data[i] = tab->data[i - 1];
     }
-    return 1;
+    tab->data[position] = mot; 
+    tab->taille++;
+    return 1; 
 }
-*/
 
-int search_tab(tab_dynamic * tab,void * mot){
-    for(int i = 0;i<tab->taille;i++){
-        if (!cmp(mot,tab->data[i]))
-        {
+int search_tab(tab_dynamic * tab, void * mot) {
+    if (!tab || !mot) {
+        return -1; 
+    }
+    for (int i = 0; i < tab->taille; i++) {
+        if (!strcmp((char *)tab->data[i], (char *)mot)) {
             return i;
-        }else{
-            return -1;
         }
-    }  
+    }
+    return -1; 
 }
