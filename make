@@ -1,35 +1,88 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -g
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "sequence.h"
+#include "hash.h"
 
-# Targets
-all: test_sequence test_tab_dynamique
+// Variables globales statiques
+static char *circularBuffer[Lg_N_gramme];
+static int currentIndex = 0;
+static struct strhash_table *hashTable;
+static int iteratorIndex = 0;
 
-# Sequence
-test_sequence: etape1/main.o etape1/sequence.o etape1/hash_x86_64.o etape1/list_x86_64.o
-	$(CC) $(CFLAGS) etape1/main.o etape1/sequence.o etape1/hash_x86_64.o etape1/list_x86_64.o -o test_sequence
+// Initialiser le N-gramme avec des mots vides
+void sequence_initialize(struct strhash_table *ht) {
+    hashTable = ht;
+    for (int i = 0; i < Lg_N_gramme; i++) {
+        circularBuffer[i] = NULL;
+    }
+    currentIndex = 0;
+}
 
-etape1/main.o: etape1/main.c etape1/sequence.h
-	$(CC) $(CFLAGS) -c etape1/main.c -o etape1/main.o
+// Initialiser l'itérateur sur le premier mot du N-gramme courant
+void sequence_itStart(void) {
+    iteratorIndex = 0;
+}
 
-etape1/sequence.o: etape1/sequence.c etape1/sequence.h
-	$(CC) $(CFLAGS) -c etape1/sequence.c -o etape1/sequence.o
+// Retourner le mot correspondant à la position de l'itérateur et avancer
+const char *sequence_itNext(void) {
+    if (iteratorIndex >= Lg_N_gramme) {
+        return NULL;
+    }
+    const char *word = circularBuffer[(currentIndex + iteratorIndex) % Lg_N_gramme];
+    iteratorIndex++;
+    return word;
+}
 
-etape1/hash_x86_64.o: etape1/hash_x86_64.c
-	$(CC) $(CFLAGS) -c etape1/hash_x86_64.c -o etape1/hash_x86_64.o
+// Tester si l'itérateur est à la fin du N-gramme
+int sequence_itHasNext(void) {
+    return iteratorIndex < Lg_N_gramme;
+}
 
-etape1/list_x86_64.o: etape1/list_x86_64.c
-	$(CC) $(CFLAGS) -c etape1/list_x86_64.c -o etape1/list_x86_64.o
+// Ajouter un nouveau mot de fin du prochain N-gramme
+void sequence_addWord(const char *word, struct strhash_table *ht) {
+    char *addedWord = strhash_wordAdd(ht, word);
+    circularBuffer[(currentIndex + Lg_N_gramme) % Lg_N_gramme] = addedWord;
+}
 
-# Tab Dynamique
-test_tab_dynamique: test_tab_dynamique.o etape2/tab_dynamique.o
-	$(CC) $(CFLAGS) test_tab_dynamique.o etape2/tab_dynamique.o -o test_tab_dynamique
+// Retourner le prochain mot qui entrera dans le N-gramme
+const char *sequence_nextWord(void) {
+    return circularBuffer[(currentIndex + Lg_N_gramme) % Lg_N_gramme];
+}
 
-test_tab_dynamique.o: test_tab_dynamique.c etape2/tab_dynamique.h
-	$(CC) $(CFLAGS) -c test_tab_dynamique.c -o test_tab_dynamique.o
+// Avancer le N-gramme pour intégrer le nouveau mot
+void sequence_progress(void) {
+    currentIndex = (currentIndex + 1) % Lg_N_gramme;
+}
 
-etape2/tab_dynamique.o: etape2/tab_dynamique.c etape2/tab_dynamique.h
-	$(CC) $(CFLAGS) -c etape2/tab_dynamique.c -o etape2/tab_dynamique.o
+// Afficher le N-gramme courant
+void sequence_print(void) {
+    for (int i = 0; i < Lg_N_gramme; i++) {
+        if (circularBuffer[(currentIndex + i) % Lg_N_gramme] != NULL) {
+            printf("%s", circularBuffer[(currentIndex + i) % Lg_N_gramme]);
+        } else {
+            printf("<vide>");
+        }
+        if (i < Lg_N_gramme - 1) {
+            printf(" / ");
+        }
+    }
+    printf("\n");
+}
 
-# Clean
-clean:
-	rm -f etape1/*.o etape2/*.o test_sequence test_tab_dynamique
+// Séquence sous forme de chaîne pour le test
+char *sequence_printInTab(void) {
+    static char buffer[256];
+    buffer[0] = '\0';
+    for (int i = 0; i < Lg_N_gramme; i++) {
+        if (circularBuffer[(currentIndex + i) % Lg_N_gramme] != NULL) {
+            strcat(buffer, circularBuffer[(currentIndex + i) % Lg_N_gramme]);
+        } else {
+            strcat(buffer, "<vide>");
+        }
+        if (i < Lg_N_gramme - 1) {
+            strcat(buffer, " / ");
+        }
+    }
+    return buffer;
+}
